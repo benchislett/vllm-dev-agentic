@@ -65,6 +65,8 @@ Commits must be signed with DCO sign-off. Use `git commit -s` to ensure proper s
 Commit messages should have a short and brief header under 80 characters, all lowercase.
 Then, if Claude is writing the commit, two line breaks and a short explanatory paragraph about the changes. 
 
+When pushing in force mode, always prefer `--force-with-lease`.
+
 ## Architecture
 
 Most of the time, `vllm/v1/worker/gpu_model_runner.py` will be your starting point when debugging. Breakpoints and log statements are very useful in `execute_model()` before and after the model forward pass, to inspect the state etc.
