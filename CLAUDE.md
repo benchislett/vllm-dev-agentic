@@ -2,10 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Machine
-
-This is a workstation machine equipped with a single NVIDIA RTX PRO 6000 Blackwell GPU which has 96GB of VRAM.
-
 ## Project Overview
 
 vLLM is a high-throughput, memory-efficient inference and serving engine for large language models (LLMs). It provides an OpenAI-compatible API server, offline batch inference via the `LLM` class, and supports a wide range of models from HuggingFace.
@@ -132,6 +128,7 @@ vLLM has a lot of serving arguments. Many are useful for debugging, benchmarking
 - `--max-num-batched-tokens`: a bound on the number of tokens in a batch. Must be at least as large as `max_num_seqs`. When this is smaller than the context length, prefills will automatically be "chunked". This can be useful for interactivity ("goodput" etc.) but is often detrimental for performance. Set to at least 8192 when benchmarking, or 32768 when doing high-concurrency or longer-context benchmarks. For extremely long context, you can set this to the next power of two larger than your max ISL. Avoid going beyond 128K as some kernels may not support such large widths, although it should work in theory.
 - `--no-enable-prefix-caching`: when benchmarking performance, prefix cache hits often introduce variance within and between runs. Disable this feature whenever you benchmark or profile a scenario that does not explicitly try to measure prefix caching performance.
 - `--gpu-memory-utilization`: defaults to 0.9, meaning the server will (try) use 90% of the available VRAM, allocating KV cache accordingly. This is usually appropriate, but when trying to squeeze an extra few % of throughput for an important use-case you can try bumping this to 0.95 or somewhere in between. It can be lowered from the default if the system just barely runs out of memory. If there are still persistent OOM issues, you should check if another process/vllm server is running on the maching.
+- `--stream-interval`: defaults to 1, meaning the frontend will send packets to each client as soon as a new token is ready. When greater than 1, the client will wait for at least N tokens (or for the generation to complete) before sending a response to the client. This helps performance at high concurrency when the amount of client traffic can bog down the CPU and result in a decrease in measured throughput. Not always used in production serving due to user-experience, but useful whenever benchmarking. It is also possible to increase the number of frontends, which is more suitable for production-scale systems.
 
 #### CUDA Graphs:
 
@@ -155,5 +152,9 @@ When using speculative decoding, the prompt contents matter and benchmarking wit
 Use minimal comments, especially when the functionality is already clear from variable, function, and parameter names.
 Follow existing style and naming conventions as much as possible. Keep style consistent with the local file being modified.
 
-Your primary goal is to accomplish the feature in as few lines of code as possible. Do not 'golf', but be minimal.
-Fewer lines of code means less to review and maintain, and a much smoother process overall. Avoid overly verbose comments, big refactors, and modifying unrelated components.
+Your primary goal is to accomplish the feature in as few lines of code as possible.
+Fewer lines of code means less to review and maintain, and a much smoother process overall. Avoid overly verbose comments, big refactors that are not explicitly required or requested, and modifying unrelated components.
+
+## Running vLLM
+
+It is not possible to run vLLM in a Claude sandbox since it requires the GPU. Claude should always ask permission when running a GPU command, such as running a vLLM unit test or launching a vLLM server.
